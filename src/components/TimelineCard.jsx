@@ -51,7 +51,7 @@ export default function TimelineCard({ period, label, data, onActionClick }) {
           <Droplets className="w-6 h-6 text-red-500 shrink-0" />
           <div>
             <div className="text-2xl font-black text-slate-800">{data.bloodSugar}</div>
-            <div className="text-xs font-semibold text-red-600 uppercase">mg/dL</div>
+            <div className="text-xs font-semibold text-red-600">mg/dL</div>
           </div>
         </div>
 
