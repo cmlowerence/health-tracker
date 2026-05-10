@@ -1,7 +1,8 @@
-import { getStore } from "@netlify/blobs";
+import { getStore, connectLambda } from "@netlify/blobs";
 
 export const handler = async (event, context) => {
-  // 1. Verify User is Logged In
+  connectLambda(event);
+
   const { user } = context.clientContext;
   if (!user) {
     return { statusCode: 401, body: JSON.stringify({ error: "Unauthorized" }) };
