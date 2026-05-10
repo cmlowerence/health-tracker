@@ -1,9 +1,10 @@
-import { ChevronLeft, ChevronRight, Activity, LogOut } from 'lucide-react';
+import { ChevronLeft, ChevronRight, Activity, LogOut, RefreshCw } from 'lucide-react';
 import { format, addDays, subDays, parseISO } from 'date-fns';
 import useStore from '../store/useStore';
 
 export default function Header({ user }) {
-  const { selectedDate, setSelectedDate, isSyncing } = useStore();
+  // Added syncWithCloud here
+  const { selectedDate, setSelectedDate, isSyncing, syncWithCloud } = useStore();
   const currentDate = parseISO(selectedDate);
   const isToday = selectedDate === format(new Date(), 'yyyy-MM-dd');
 
@@ -27,9 +28,20 @@ export default function Header({ user }) {
         </div>
         
         <div className="flex items-center gap-3">
-          <span className={`text-xs px-2 py-1 rounded-full font-medium shadow-sm transition-colors ${isSyncing ? 'bg-amber-400 text-amber-900 animate-pulse' : 'bg-emerald-500 text-white'}`}>
-            {isSyncing ? 'Syncing...' : 'Synced'}
-          </span>
+          {/* THE FIX: Made the Sync badge a clickable button */}
+          <button 
+            onClick={() => user && syncWithCloud(user)}
+            disabled={isSyncing || !user}
+            className={`flex items-center gap-1 text-xs px-2 py-1 rounded-full font-medium shadow-sm transition-all active:scale-95 ${
+              isSyncing 
+                ? 'bg-amber-400 text-amber-900 animate-pulse cursor-not-allowed' 
+                : 'bg-emerald-500 text-white hover:bg-emerald-400 cursor-pointer border border-emerald-400/50'
+            }`}
+          >
+            <RefreshCw className={`w-3 h-3 ${isSyncing ? 'animate-spin' : ''}`} />
+            {isSyncing ? 'Syncing...' : 'Sync'}
+          </button>
+          
           <button onClick={handleLogout} className="p-1.5 bg-emerald-700/50 hover:bg-emerald-700 rounded-lg transition" title="Log Out">
             <LogOut className="w-4 h-4 text-emerald-100" />
           </button>
@@ -55,4 +67,3 @@ export default function Header({ user }) {
     </header>
   );
 }
-
