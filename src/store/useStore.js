@@ -6,7 +6,9 @@ const useStore = create((set, get) => ({
   selectedDate: format(new Date(), 'yyyy-MM-dd'),
   logs: {},
   isLoaded: false,
-  isSyncing: false, // UI indicator state
+  isSyncing: false,
+  activeTab: 'home', 
+  setActiveTab: (tab) => set({ activeTab: tab }),
 
   initApp: async () => {
     const savedLogs = await localforage.getItem('health_logs') || {};
@@ -42,29 +44,22 @@ const useStore = create((set, get) => ({
     await localforage.setItem('health_logs', updatedLogs);
   },
 
-  // NEW: The Sync Engine
   syncWithCloud: async (user) => {
     if (!user || !navigator.onLine) return;
     
     set({ isSyncing: true });
     try {
       const { logs } = get();
-      
-      // Get auth token
       const token = await user.jwt();
 
-      // POST to our Netlify Function
       const response = await fetch('/.netlify/functions/sync', {
         method: 'POST',
-        headers: {
-          Authorization: `Bearer ${token}`,
-        },
+        headers: { Authorization: `Bearer ${token}` },
         body: JSON.stringify({ logs })
       });
 
       if (!response.ok) throw new Error('Sync failed');
 
-      // Update local storage with the merged master copy from the cloud
       const masterData = await response.json();
       set({ logs: masterData.logs });
       await localforage.setItem('health_logs', masterData.logs);
