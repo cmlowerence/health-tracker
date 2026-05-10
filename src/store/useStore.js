@@ -50,7 +50,7 @@ const useStore = create((set, get) => ({
     set({ isSyncing: true });
     try {
       const { logs } = get();
-      const token = await user.jwt();
+      const token = await user.jwt(true);
 
       const response = await fetch('/.netlify/functions/sync', {
         method: 'POST',

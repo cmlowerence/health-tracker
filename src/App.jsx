@@ -62,19 +62,22 @@ export default function App() {
   }, [user, syncWithCloud]);
 
   const handleGoogleLogin = () => {
-    if (!window.netlifyIdentity) {
-      setAuthError('Identity widget is unavailable.');
-      return;
-    }
+      if (!window.netlifyIdentity) {
+        setAuthError('Identity widget is unavailable.');
+        return;
+      }
 
-    setAuthError('');
+      setAuthError('');
 
-    try {
-      window.netlifyIdentity.open('login', { provider: 'google' });
-    } catch {
-      window.netlifyIdentity.open();
-    }
-  };
+      try {
+        window.netlifyIdentity.close(); 
+        
+        window.netlifyIdentity.open('login'); 
+      } catch (err) {
+        console.error("Widget crash caught:", err);
+        window.location.reload(); 
+      }
+    };
 
   if (!isLoaded) return <div className="min-h-screen bg-slate-50 flex items-center justify-center font-bold text-slate-400">Loading VitalTrack...</div>;
 
