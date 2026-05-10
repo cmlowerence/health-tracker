@@ -3,7 +3,7 @@ import { format, addDays, subDays, parseISO } from 'date-fns';
 import useStore from '../store/useStore';
 
 export default function Header({ user }) {
-  const { selectedDate, setSelectedDate } = useStore();
+  const { selectedDate, setSelectedDate, isSyncing } = useStore();
   const currentDate = parseISO(selectedDate);
   const isToday = selectedDate === format(new Date(), 'yyyy-MM-dd');
 
@@ -29,8 +29,9 @@ export default function Header({ user }) {
         </div>
         
         <div className="flex items-center gap-3">
-          <span className="text-xs bg-emerald-500 px-2 py-1 rounded-full font-medium shadow-sm">Offline</span>
-          <button onClick={handleLogout} className="p-1.5 bg-emerald-700/50 hover:bg-emerald-700 rounded-lg transition" title="Log Out">
+        <span className={`text-xs px-2 py-1 rounded-full font-medium shadow-sm transition-colors ${isSyncing ? 'bg-amber-400 text-amber-900 animate-pulse' : 'bg-emerald-500 text-white'}`}>
+            {isSyncing ? 'Syncing...' : 'Synced'}
+        </span>          <button onClick={handleLogout} className="p-1.5 bg-emerald-700/50 hover:bg-emerald-700 rounded-lg transition" title="Log Out">
             <LogOut className="w-4 h-4 text-emerald-100" />
           </button>
         </div>

@@ -6,32 +6,39 @@ import EntryModal from './components/EntryModal';
 import { Activity } from 'lucide-react';
 
 export default function App() {
-  const { isLoaded, initApp, selectedDate, logs } = useStore();
+  const { isLoaded, initApp, selectedDate, logs, syncWithCloud } = useStore();
   const [activeModal, setActiveModal] = useState(null);
   const [user, setUser] = useState(null);
 
   useEffect(() => {
     initApp();
 
-    // Initialize Netlify Identity
     if (window.netlifyIdentity) {
       window.netlifyIdentity.init();
       setUser(window.netlifyIdentity.currentUser());
 
       window.netlifyIdentity.on('login', (userObj) => {
         setUser(userObj);
-        window.netlifyIdentity.close(); // Close the modal after login
+        window.netlifyIdentity.close();
       });
 
-      window.netlifyIdentity.on('logout', () => {
-        setUser(null);
-      });
+      window.netlifyIdentity.on('logout', () => setUser(null));
     }
   }, [initApp]);
 
+  // NEW: Auto-Sync when user is logged in or network connects
+  useEffect(() => {
+    if (user) {
+      syncWithCloud(user);
+
+      const handleOnline = () => syncWithCloud(user);
+      window.addEventListener('online', handleOnline);
+      return () => window.removeEventListener('online', handleOnline);
+    }
+  }, [user, syncWithCloud]);
+
   if (!isLoaded) return <div className="min-h-screen bg-slate-50 flex items-center justify-center font-bold text-slate-400">Loading VitalTrack...</div>;
 
-  // --- THE LOGIN SCREEN ---
   if (!user) {
     return (
       <div className="min-h-screen bg-emerald-600 flex flex-col items-center justify-center p-6 text-white text-center">
@@ -49,44 +56,29 @@ export default function App() {
     );
   }
 
-  // --- THE MAIN APP (Only visible if logged in) ---
   const currentDayData = logs[selectedDate] || {};
 
   return (
     <div className="min-h-screen bg-slate-50 pb-10 flex justify-center">
       <div className="w-full max-w-md bg-slate-50 min-h-screen relative shadow-2xl">
-        
         <Header user={user} />
-
+        
         <main className="p-4 space-y-4">
-          <TimelineCard 
-            period="morning" 
-            label="Morning" 
-            data={currentDayData.morning} 
-            onActionClick={setActiveModal} 
-          />
-          <TimelineCard 
-            period="noon" 
-            label="Noon" 
-            data={currentDayData.noon} 
-            onActionClick={setActiveModal} 
-          />
-          <TimelineCard 
-            period="evening" 
-            label="Evening" 
-            data={currentDayData.evening} 
-            onActionClick={setActiveModal} 
-          />
+          <TimelineCard period="morning" label="Morning" data={currentDayData.morning} onActionClick={setActiveModal} />
+          <TimelineCard period="noon" label="Noon" data={currentDayData.noon} onActionClick={setActiveModal} />
+          <TimelineCard period="evening" label="Evening" data={currentDayData.evening} onActionClick={setActiveModal} />
         </main>
 
         {activeModal && (
           <EntryModal 
             period={activeModal} 
             label={activeModal.charAt(0).toUpperCase() + activeModal.slice(1)}
-            onClose={() => setActiveModal(null)} 
+            onClose={() => {
+              setActiveModal(null);
+              syncWithCloud(user); // Auto-sync right after saving!
+            }} 
           />
         )}
-        
       </div>
     </div>
   );
