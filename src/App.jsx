@@ -26,11 +26,9 @@ export default function App() {
     }
   }, [initApp]);
 
-  // NEW: Auto-Sync when user is logged in or network connects
   useEffect(() => {
     if (user) {
       syncWithCloud(user);
-
       const handleOnline = () => syncWithCloud(user);
       window.addEventListener('online', handleOnline);
       return () => window.removeEventListener('online', handleOnline);
@@ -39,6 +37,7 @@ export default function App() {
 
   if (!isLoaded) return <div className="min-h-screen bg-slate-50 flex items-center justify-center font-bold text-slate-400">Loading VitalTrack...</div>;
 
+  // Login Screen
   if (!user) {
     return (
       <div className="min-h-screen bg-emerald-600 flex flex-col items-center justify-center p-6 text-white text-center">
@@ -47,7 +46,13 @@ export default function App() {
         <p className="text-emerald-100 mb-10 text-lg">Your personal, offline-first health journal.</p>
         
         <button 
-          onClick={() => window.netlifyIdentity.open()}
+          onClick={() => {
+            if (window.netlifyIdentity) {
+              window.netlifyIdentity.open();
+            } else {
+              alert("The login system is still loading. Please wait a moment and try again.");
+            }
+          }}
           className="bg-white text-emerald-700 font-bold text-lg px-8 py-4 rounded-xl shadow-lg hover:scale-105 active:scale-95 transition-all w-full max-w-xs"
         >
           Sign In to Continue
@@ -56,6 +61,7 @@ export default function App() {
     );
   }
 
+  // Main App
   const currentDayData = logs[selectedDate] || {};
 
   return (
@@ -75,7 +81,7 @@ export default function App() {
             label={activeModal.charAt(0).toUpperCase() + activeModal.slice(1)}
             onClose={() => {
               setActiveModal(null);
-              syncWithCloud(user); // Auto-sync right after saving!
+              syncWithCloud(user); 
             }} 
           />
         )}
