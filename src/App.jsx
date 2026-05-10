@@ -11,35 +11,43 @@ export default function App() {
   const { isLoaded, initApp, selectedDate, logs, syncWithCloud, activeTab } = useStore();
   const [activeModal, setActiveModal] = useState(null);
   const [user, setUser] = useState(null);
+  const [authError, setAuthError] = useState('');
 
- useEffect(() => {
-  initApp();
+  useEffect(() => {
+    initApp();
 
-  const identity = window.netlifyIdentity;
-  if (!identity) return;
+    const identity = window.netlifyIdentity;
+    if (!identity) {
+      setAuthError('Identity widget failed to load.');
+      return;
+    }
 
-  identity.init();
+    identity.init();
 
-  const handleInit = (userObj) => setUser(userObj || null);
-  const handleLogin = (userObj) => {
-    setUser(userObj);
-    identity.close();
-  };
-  const handleLogout = () => setUser(null);
-  const handleError = (err) => console.error('Netlify Identity error:', err);
+    const handleInit = (userObj) => setUser(userObj || null);
+    const handleLogin = (userObj) => {
+      setAuthError('');
+      setUser(userObj);
+      identity.close();
+    };
+    const handleLogout = () => setUser(null);
+    const handleError = (err) => {
+      console.error('Netlify Identity error:', err);
+      setAuthError(err?.message || 'Login failed.');
+    };
 
-  identity.on('init', handleInit);
-  identity.on('login', handleLogin);
-  identity.on('logout', handleLogout);
-  identity.on('error', handleError);
+    identity.on('init', handleInit);
+    identity.on('login', handleLogin);
+    identity.on('logout', handleLogout);
+    identity.on('error', handleError);
 
-  return () => {
-    identity.off('init', handleInit);
-    identity.off('login', handleLogin);
-    identity.off('logout', handleLogout);
-    identity.off('error', handleError);
-  };
-}, [initApp]);
+    return () => {
+      identity.off('init', handleInit);
+      identity.off('login', handleLogin);
+      identity.off('logout', handleLogout);
+      identity.off('error', handleError);
+    };
+  }, [initApp]);
 
   useEffect(() => {
     if (user) {
@@ -50,6 +58,21 @@ export default function App() {
     }
   }, [user, syncWithCloud]);
 
+  const handleGoogleLogin = () => {
+    if (!window.netlifyIdentity) {
+      setAuthError('Identity widget is unavailable.');
+      return;
+    }
+
+    setAuthError('');
+
+    try {
+      window.netlifyIdentity.open('login', { provider: 'google' });
+    } catch {
+      window.netlifyIdentity.open();
+    }
+  };
+
   if (!isLoaded) return <div className="min-h-screen bg-slate-50 flex items-center justify-center font-bold text-slate-400">Loading VitalTrack...</div>;
 
   if (!user) {
@@ -58,12 +81,13 @@ export default function App() {
         <Activity className="w-20 h-20 mb-6 text-emerald-100" />
         <h1 className="text-4xl font-bold mb-2">VitalTrack</h1>
         <p className="text-emerald-100 mb-10 text-lg">Your personal, offline-first health journal.</p>
-        <button 
-          onClick={() => window.netlifyIdentity ? window.netlifyIdentity.open() : alert("Loading...")}
+        <button
+          onClick={handleGoogleLogin}
           className="bg-white text-emerald-700 font-bold text-lg px-8 py-4 rounded-xl shadow-lg w-full max-w-xs"
         >
-          Sign In to Continue
+          Continue with Google
         </button>
+        {authError && <p className="mt-4 text-sm text-amber-100 max-w-xs">{authError}</p>}
       </div>
     );
   }
@@ -73,11 +97,11 @@ export default function App() {
   return (
     <div className="min-h-screen bg-slate-50 flex justify-center print:bg-white">
       <div className="w-full max-w-md bg-slate-50 min-h-screen relative shadow-2xl print:shadow-none print:max-w-none print:bg-white">
-        
+
         <div className="print:hidden">
           <Header user={user} />
         </div>
-        
+
         <main className="w-full">
           {activeTab === 'home' ? (
             <div className="p-4 space-y-4 pb-24 print:hidden animate-fade-in">
@@ -91,16 +115,18 @@ export default function App() {
         </main>
 
         {activeModal && (
-          <EntryModal 
-            period={activeModal} 
+          <EntryModal
+            period={activeModal}
             label={activeModal.charAt(0).toUpperCase() + activeModal.slice(1)}
-            onClose={() => { setActiveModal(null); syncWithCloud(user); }} 
+            onClose={() => {
+              setActiveModal(null);
+              syncWithCloud(user);
+            }}
           />
         )}
-        
+
         <BottomNav />
       </div>
     </div>
   );
 }
-

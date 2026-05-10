@@ -1,16 +1,14 @@
-# React + Vite
+# VitalTrack
 
-This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
+VitalTrack is an offline-first health journal built with React + Vite.
 
-Currently, two official plugins are available:
+## Google login troubleshooting
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Oxc](https://oxc.rs)
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/)
+If Google login is not completing, the issue is usually configuration rather than UI code.
 
-## React Compiler
+1. **Netlify Identity must be enabled** for the site.
+2. **Google provider must be enabled** in Netlify Identity settings.
+3. **Authorized redirect URI must match the deployed site URL** in your Google OAuth app settings.
+4. For local development, use the **Netlify dev environment** so Identity callbacks are handled correctly.
 
-The React Compiler is not enabled on this template because of its impact on dev & build performances. To add it, see [this documentation](https://react.dev/learn/react-compiler/installation).
-
-## Expanding the ESLint configuration
-
-If you are developing a production application, we recommend using TypeScript with type-aware lint rules enabled. Check out the [TS template](https://github.com/vitejs/vite/tree/main/packages/create-vite/template-react-ts) for information on how to integrate TypeScript and [`typescript-eslint`](https://typescript-eslint.io) in your project.
+The app opens the Netlify Identity widget in Google login mode (`provider: "google"`) and surfaces auth errors on-screen.
