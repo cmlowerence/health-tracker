@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { X } from 'lucide-react';
+import { X, Clock } from 'lucide-react';
 import { format } from 'date-fns';
 import useStore from '../store/useStore';
 
@@ -16,10 +16,12 @@ export default function EntryModal({ period, label, onClose }) {
   // Initialize form when component mounts
   useEffect(() => {
     if (existingLog) {
+      // If editing an old entry, use the previously saved time
       setTime(existingLog.time);
       setBloodSugar(existingLog.bloodSugar.toString());
       setTemperature(existingLog.temperature ? existingLog.temperature.toString() : '');
     } else {
+      // If it's a new entry, default to EXACTLY time.now
       setTime(format(new Date(), 'HH:mm'));
       setBloodSugar('');
       setTemperature('');
@@ -53,14 +55,18 @@ export default function EntryModal({ period, label, onClose }) {
         </div>
 
         <div className="space-y-5">
+          {/* Editable Time Input */}
           <div>
-            <label className="block text-sm font-semibold text-slate-600 mb-1">Time</label>
+            <label className="block text-sm font-semibold text-slate-600 mb-1 flex items-center gap-1">
+              <Clock className="w-4 h-4 text-emerald-600" /> Time
+            </label>
             <input 
               type="time" 
               value={time}
               onChange={(e) => setTime(e.target.value)}
               className="w-full text-lg p-3 bg-slate-50 border border-slate-200 rounded-xl focus:ring-2 focus:ring-emerald-500 outline-none"
             />
+            <p className="text-[10px] text-slate-400 mt-1">Tap the time to edit if you measured earlier.</p>
           </div>
 
           <div>
