@@ -12,18 +12,34 @@ export default function App() {
   const [activeModal, setActiveModal] = useState(null);
   const [user, setUser] = useState(null);
 
-  useEffect(() => {
-    initApp();
-    if (window.netlifyIdentity) {
-      window.netlifyIdentity.init();
-      setUser(window.netlifyIdentity.currentUser());
-      window.netlifyIdentity.on('login', (userObj) => {
-        setUser(userObj);
-        window.netlifyIdentity.close();
-      });
-      window.netlifyIdentity.on('logout', () => setUser(null));
-    }
-  }, [initApp]);
+ useEffect(() => {
+  initApp();
+
+  const identity = window.netlifyIdentity;
+  if (!identity) return;
+
+  identity.init();
+
+  const handleInit = (userObj) => setUser(userObj || null);
+  const handleLogin = (userObj) => {
+    setUser(userObj);
+    identity.close();
+  };
+  const handleLogout = () => setUser(null);
+  const handleError = (err) => console.error('Netlify Identity error:', err);
+
+  identity.on('init', handleInit);
+  identity.on('login', handleLogin);
+  identity.on('logout', handleLogout);
+  identity.on('error', handleError);
+
+  return () => {
+    identity.off('init', handleInit);
+    identity.off('login', handleLogin);
+    identity.off('logout', handleLogout);
+    identity.off('error', handleError);
+  };
+}, [initApp]);
 
   useEffect(() => {
     if (user) {
