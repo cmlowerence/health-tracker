@@ -22,8 +22,7 @@ export default function App() {
       return;
     }
 
-    identity.init();
-
+    // 1. Define the handlers
     const handleInit = (userObj) => setUser(userObj || null);
     const handleLogin = (userObj) => {
       setAuthError('');
@@ -36,10 +35,14 @@ export default function App() {
       setAuthError(err?.message || 'Login failed.');
     };
 
+    // 2. Attach the listeners FIRST
     identity.on('init', handleInit);
     identity.on('login', handleLogin);
     identity.on('logout', handleLogout);
     identity.on('error', handleError);
+
+    // 3. Call init() LAST so it properly triggers the 'init' event on redirect
+    identity.init();
 
     return () => {
       identity.off('init', handleInit);
@@ -130,3 +133,4 @@ export default function App() {
     </div>
   );
 }
+
