@@ -16,6 +16,7 @@ export default function HistoryTab({ user }) {
 
   const getLogDisplay = (dayData, period) => {
     const data = dayData?.[period];
+    console.log(data);
     if (!data) return <span className="text-slate-300 print:text-slate-200 text-center block">-</span>;
     
     return (
