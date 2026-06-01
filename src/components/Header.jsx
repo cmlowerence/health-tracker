@@ -1,10 +1,12 @@
-import { ChevronLeft, ChevronRight, Activity, LogOut, RefreshCw } from 'lucide-react';
+import { useState } from 'react';
+import { ChevronLeft, ChevronRight, Activity, LogOut, RefreshCw, Pencil } from 'lucide-react';
 import { format, addDays, subDays, parseISO } from 'date-fns';
 import useStore from '../store/useStore';
+import PatientNameModal from './PatientNameModal';
 
 export default function Header({ user }) {
-  // Added syncWithCloud here
-  const { selectedDate, setSelectedDate, isSyncing, syncWithCloud } = useStore();
+  const { selectedDate, setSelectedDate, isSyncing, syncWithCloud, patientName } = useStore();
+  const [isPatientNameModalOpen, setIsPatientNameModalOpen] = useState(false);
   const currentDate = parseISO(selectedDate);
   const isToday = selectedDate === format(new Date(), 'yyyy-MM-dd');
 
@@ -20,9 +22,17 @@ export default function Header({ user }) {
           <div>
             <h1 className="text-xl font-bold tracking-wide leading-tight">VitalTrack</h1>
             {user && (
-              <p className="text-[10px] text-emerald-200 font-medium tracking-wider uppercase">
-                {user.user_metadata?.full_name || 'User'}
-              </p>
+              <div className="flex items-center gap-1.5 text-[10px] text-emerald-200 font-medium tracking-wider uppercase">
+                <span>{patientName}</span>
+                <button
+                  onClick={() => setIsPatientNameModalOpen(true)}
+                  className="p-0.5 rounded text-emerald-100 hover:bg-emerald-500/70 hover:text-white transition"
+                  title="Edit patient name"
+                  aria-label="Edit patient name"
+                >
+                  <Pencil className="w-3 h-3" />
+                </button>
+              </div>
             )}
           </div>
         </div>
@@ -64,6 +74,9 @@ export default function Header({ user }) {
           <ChevronRight className="w-5 h-5" />
         </button>
       </div>
+      {isPatientNameModalOpen && (
+        <PatientNameModal onClose={() => setIsPatientNameModalOpen(false)} />
+      )}
     </header>
   );
 }
