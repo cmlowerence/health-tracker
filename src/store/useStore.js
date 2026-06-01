@@ -3,13 +3,22 @@ import localforage from 'localforage';
 import { format } from 'date-fns';
 
 const PATIENT_PROFILE_KEY = 'patient_profile';
+const DEFAULT_PROFILE = { patientName: 'User', updatedAt: 0 };
 
 const getDefaultPatientName = (user) => user?.user_metadata?.full_name?.trim() || 'User';
+
+const normalizeProfile = (profile, fallbackPatientName = DEFAULT_PROFILE.patientName) => {
+  const patientName = profile?.patientName?.trim() || fallbackPatientName;
+  const updatedAt = Number.isFinite(profile?.updatedAt) ? profile.updatedAt : 0;
+
+  return { patientName, updatedAt };
+};
 
 const useStore = create((set, get) => ({
   selectedDate: format(new Date(), 'yyyy-MM-dd'),
   logs: {},
-  patientName: 'User',
+  profile: DEFAULT_PROFILE,
+  patientName: DEFAULT_PROFILE.patientName,
   isLoaded: false,
   isSyncing: false,
   activeTab: 'home', 
@@ -17,23 +26,26 @@ const useStore = create((set, get) => ({
 
   initApp: async () => {
     const savedLogs = await localforage.getItem('health_logs') || {};
-    const savedProfile = await localforage.getItem(PATIENT_PROFILE_KEY);
-    const patientName = savedProfile?.patientName?.trim() || get().patientName;
-    set({ logs: savedLogs, patientName, isLoaded: true });
+    const savedProfile = normalizeProfile(await localforage.getItem(PATIENT_PROFILE_KEY), get().patientName);
+    set({ logs: savedLogs, profile: savedProfile, patientName: savedProfile.patientName, isLoaded: true });
   },
 
   initProfile: async (user) => {
-    const savedProfile = await localforage.getItem(PATIENT_PROFILE_KEY);
-    const savedPatientName = savedProfile?.patientName?.trim();
-    set({ patientName: savedPatientName || getDefaultPatientName(user) });
+    const savedProfile = normalizeProfile(
+      await localforage.getItem(PATIENT_PROFILE_KEY),
+      getDefaultPatientName(user)
+    );
+    set({ profile: savedProfile, patientName: savedProfile.patientName });
   },
 
   setPatientName: async (name) => {
     const patientName = name.trim();
     if (!patientName) return false;
 
-    set({ patientName });
-    await localforage.setItem(PATIENT_PROFILE_KEY, { patientName });
+    const profile = { patientName, updatedAt: Date.now() };
+
+    set({ profile, patientName });
+    await localforage.setItem(PATIENT_PROFILE_KEY, profile);
     return true;
   },
 
@@ -71,20 +83,27 @@ const useStore = create((set, get) => ({
     
     set({ isSyncing: true });
     try {
-      const { logs } = get();
+      const { logs, profile } = get();
       const token = await user.jwt(true);
 
       const response = await fetch('/.netlify/functions/sync', {
         method: 'POST',
         headers: { Authorization: `Bearer ${token}` },
-        body: JSON.stringify({ logs })
+        body: JSON.stringify({ logs, profile })
       });
 
       if (!response.ok) throw new Error('Sync failed');
 
       const masterData = await response.json();
-      set({ logs: masterData.logs });
+      const syncedProfile = normalizeProfile(masterData.profile, profile.patientName);
+
+      set({
+        logs: masterData.logs,
+        profile: syncedProfile,
+        patientName: syncedProfile.patientName
+      });
       await localforage.setItem('health_logs', masterData.logs);
+      await localforage.setItem(PATIENT_PROFILE_KEY, syncedProfile);
 
     } catch (error) {
       console.error("Sync error:", error);
