@@ -38,11 +38,15 @@ export default function TimelineCard({ period, label, data, onActionClick }) {
           <span className="text-sm font-medium text-slate-500 mt-1 inline-block">Log time: {time12h}</span>
         </div>
         
-        <button 
+        <button
+          type="button"
+          aria-label={`Edit ${label} log`}
+          title={`Edit ${label} log`}
           onClick={() => onActionClick(period)}
-          className="p-2 bg-slate-50 text-slate-400 hover:text-emerald-600 hover:bg-emerald-50 rounded-xl transition"
+          className="min-h-11 px-3 py-2 bg-slate-50 text-slate-500 hover:text-emerald-600 hover:bg-emerald-50 rounded-xl transition flex items-center gap-2 font-semibold"
         >
           <Pencil className="w-5 h-5" />
+          <span className="text-sm">Edit</span>
         </button>
       </div>
 
