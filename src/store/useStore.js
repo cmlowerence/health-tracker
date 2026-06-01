@@ -2,9 +2,14 @@ import { create } from 'zustand';
 import localforage from 'localforage';
 import { format } from 'date-fns';
 
+const PATIENT_PROFILE_KEY = 'patient_profile';
+
+const getDefaultPatientName = (user) => user?.user_metadata?.full_name?.trim() || 'User';
+
 const useStore = create((set, get) => ({
   selectedDate: format(new Date(), 'yyyy-MM-dd'),
   logs: {},
+  patientName: 'User',
   isLoaded: false,
   isSyncing: false,
   activeTab: 'home', 
@@ -12,7 +17,24 @@ const useStore = create((set, get) => ({
 
   initApp: async () => {
     const savedLogs = await localforage.getItem('health_logs') || {};
-    set({ logs: savedLogs, isLoaded: true });
+    const savedProfile = await localforage.getItem(PATIENT_PROFILE_KEY);
+    const patientName = savedProfile?.patientName?.trim() || get().patientName;
+    set({ logs: savedLogs, patientName, isLoaded: true });
+  },
+
+  initProfile: async (user) => {
+    const savedProfile = await localforage.getItem(PATIENT_PROFILE_KEY);
+    const savedPatientName = savedProfile?.patientName?.trim();
+    set({ patientName: savedPatientName || getDefaultPatientName(user) });
+  },
+
+  setPatientName: async (name) => {
+    const patientName = name.trim();
+    if (!patientName) return false;
+
+    set({ patientName });
+    await localforage.setItem(PATIENT_PROFILE_KEY, { patientName });
+    return true;
   },
 
   setSelectedDate: (date) => set({ selectedDate: date }),
@@ -73,4 +95,3 @@ const useStore = create((set, get) => ({
 }));
 
 export default useStore;
-

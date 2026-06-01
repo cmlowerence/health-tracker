@@ -8,7 +8,7 @@ import HistoryTab from './components/HistoryTab';
 import { Activity } from 'lucide-react';
 
 export default function App() {
-  const { isLoaded, initApp, selectedDate, logs, syncWithCloud, activeTab } = useStore();
+  const { isLoaded, initApp, initProfile, selectedDate, logs, syncWithCloud, activeTab } = useStore();
   const [activeModal, setActiveModal] = useState(null);
   const [user, setUser] = useState(null);
   const [authError, setAuthError] = useState('');
@@ -54,12 +54,13 @@ export default function App() {
 
   useEffect(() => {
     if (user) {
+      initProfile(user);
       syncWithCloud(user);
       const handleOnline = () => syncWithCloud(user);
       window.addEventListener('online', handleOnline);
       return () => window.removeEventListener('online', handleOnline);
     }
-  }, [user, syncWithCloud]);
+  }, [user, initProfile, syncWithCloud]);
 
   const handleGoogleLogin = () => {
       if (!window.netlifyIdentity) {
@@ -116,7 +117,7 @@ export default function App() {
               <TimelineCard period="evening" label="Evening" data={currentDayData.evening} onActionClick={setActiveModal} />
             </div>
           ) : (
-            <HistoryTab user={user} />
+            <HistoryTab />
           )}
         </main>
 

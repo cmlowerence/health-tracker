@@ -3,8 +3,8 @@ import { Printer, LayoutList, TableProperties } from 'lucide-react';
 import { format, parseISO } from 'date-fns';
 import useStore from '../store/useStore';
 
-export default function HistoryTab({ user }) {
-  const { logs } = useStore();
+export default function HistoryTab() {
+  const { logs, patientName } = useStore();
   const [viewMode, setViewMode] = useState('cards');
 
   const sortedDates = Object.keys(logs).sort((a, b) => new Date(b) - new Date(a));
@@ -61,7 +61,7 @@ export default function HistoryTab({ user }) {
 
       <div className="hidden print:block mb-6 border-b-2 border-emerald-600 pb-4">
         <h1 className="text-2xl font-black text-slate-800">VitalTrack Medical Report</h1>
-        <p className="text-sm text-slate-500">Patient: {user?.user_metadata?.full_name || 'User'} | Generated: {format(new Date(), 'MMM d, yyyy')}</p>
+        <p className="text-sm text-slate-500">Patient: {patientName} | Generated: {format(new Date(), 'MMM d, yyyy')}</p>
       </div>
 
       {sortedDates.length === 0 ? (
